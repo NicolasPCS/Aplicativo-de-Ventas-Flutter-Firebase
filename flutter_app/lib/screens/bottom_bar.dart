@@ -8,6 +8,7 @@ import 'feeds.dart';
 import 'home.dart';
 
 class BottomBarScreen extends StatefulWidget {
+  static const routeName = '/BottomBarScreen';
   @override
   _BottomBarScreenState createState() => _BottomBarScreenState();
 }
@@ -29,7 +30,7 @@ class _BottomBarScreenState extends State<BottomBarScreen> {
         'page': Search(),
       },
       {
-        'page': Cart(),
+        'page': CartScreen(),
       },
       {
         'page': UserInfo(),

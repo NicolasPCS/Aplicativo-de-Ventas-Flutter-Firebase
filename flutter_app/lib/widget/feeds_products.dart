@@ -1,12 +1,13 @@
 import 'package:flutter_app/inner_screens/product_details.dart';
 import 'package:flutter_app/models/product.dart';
+import 'package:flutter_app/provider/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart';
 import 'package:provider/provider.dart';
 
-class FeedProducts extends StatefulWidget {
-  
+import 'feeds.dialog.dart';
 
+class FeedProducts extends StatefulWidget {
   @override
   _FeedProductsState createState() => _FeedProductsState();
 }
@@ -14,11 +15,14 @@ class FeedProducts extends StatefulWidget {
 class _FeedProductsState extends State<FeedProducts> {
   @override
   Widget build(BuildContext context) {
-     final productsAttributes = Provider.of<Product>(context);
+    final cartProvider = Provider.of<CartProvider>(context);
+
+    final productsAttributes = Provider.of<Product>(context);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: InkWell(
-        onTap: () => Navigator.pushNamed(context, ProductDetails.routeName),
+        onTap: () => Navigator.pushNamed(context, ProductDetails.routeName,
+            arguments: productsAttributes.id),
         child: Container(
           width: 250,
           height: 290,
@@ -40,7 +44,7 @@ class _FeedProductsState extends State<FeedProducts> {
                               maxHeight:
                                   MediaQuery.of(context).size.height * 0.3),
                           child: Image.network(
-                           productsAttributes.imageUrl,
+                            productsAttributes.imageUrl,
                             //   fit: BoxFit.fitWidth,
                           ),
                         ),
@@ -107,7 +111,14 @@ class _FeedProductsState extends State<FeedProducts> {
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
-                              onTap: () {},
+                              onTap: () async {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) => FeedDialog(
+                                    productId: productsAttributes.id,
+                                  ),
+                                );
+                              },
                               borderRadius: BorderRadius.circular(18.0),
                               child: Icon(
                                 Icons.more_horiz,
