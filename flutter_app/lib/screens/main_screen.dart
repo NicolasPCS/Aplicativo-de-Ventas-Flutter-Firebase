@@ -1,4 +1,4 @@
-import 'package:flutter_app/inner_screens/upload_product_form.dart';
+import 'package:flutter_app/screens/upload_product_form.dart';
 import 'package:flutter_app/screens/landing_page.dart';
 import 'package:flutter/material.dart';
 

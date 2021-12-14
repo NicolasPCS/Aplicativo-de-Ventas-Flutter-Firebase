@@ -38,6 +38,7 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final productsData = Provider.of<Products>(context);
+    productsData.FetchProducts();
     final popularItems = productsData.popularProducts;
     print('popularItems length ${popularItems.length}');
     return Scaffold(
@@ -190,7 +191,8 @@ class _HomeState extends State<Home> {
                     Spacer(),
                     FlatButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed(Feeds.routeName, arguments: 'popular');
+                        Navigator.of(context)
+                            .pushNamed(Feeds.routeName, arguments: 'popular');
                       },
                       child: Text(
                         'View all...',

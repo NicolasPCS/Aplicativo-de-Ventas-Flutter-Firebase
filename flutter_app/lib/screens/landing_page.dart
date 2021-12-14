@@ -1,10 +1,14 @@
 import 'package:flutter_app/consts/colors.dart';
 import 'package:flutter_app/screens/auth/login.dart';
 import 'package:flutter_app/screens/auth/sign_up.dart';
+import 'package:flutter_app/screens/bottom_bar.dart';
+import 'package:flutter_app/services/global_method.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_app/screens/bottom_bar.dart';
 import 'package:flutter_icons/flutter_icons.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class LandingPage extends StatefulWidget {
   @override
@@ -21,6 +25,9 @@ class _LandingPageState extends State<LandingPage>
     'https://e-shopy.org/wp-content/uploads/2020/08/shop.jpeg',
     'https://e-shopy.org/wp-content/uploads/2020/08/shop.jpeg',
   ];
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  GlobalMethods _globalMethods = GlobalMethods();
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();
@@ -45,6 +52,57 @@ class _LandingPageState extends State<LandingPage>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _googleSignIn() async {
+    final googleSignIn = GoogleSignIn();
+    final googleAccount = await googleSignIn.signIn();
+    if (googleAccount != null) {
+      final googleAuth = await googleAccount.authentication;
+      if (googleAuth.accessToken != null && googleAuth.idToken != null) {
+        try {
+          var date = DateTime.now().toString();
+          var dateparse = DateTime.parse(date);
+          var formattedDate =
+              "${dateparse.day}-${dateparse.month}-${dateparse.year}";
+          final authResult = await _auth.signInWithCredential(
+              GoogleAuthProvider.credential(
+                  idToken: googleAuth.idToken,
+                  accessToken: googleAuth.accessToken));
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(authResult.user.uid)
+              .set({
+            'id': authResult.user.uid,
+            'name': authResult.user.displayName,
+            'email': authResult.user.email,
+            'phoneNumber': authResult.user.phoneNumber,
+            'imageUrl': authResult.user.photoURL,
+            'joinedAt': formattedDate,
+            'createdAt': Timestamp.now(),
+          });
+        } catch (error) {
+          _globalMethods.authErrorHandle(error.message, context);
+        }
+      }
+    }
+  }
+
+  void _loginAnonymosly() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _auth.signInAnonymously();
+    } catch (error) {
+      _globalMethods.authErrorHandle(error.message, context);
+      print('error occured ${error.message}');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -204,21 +262,25 @@ class _LandingPageState extends State<LandingPage>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               OutlineButton(
-                onPressed: () {},
+                onPressed: _googleSignIn,
                 shape: StadiumBorder(),
                 highlightedBorderColor: Colors.red.shade200,
                 borderSide: BorderSide(width: 2, color: Colors.red),
                 child: Text('Google +'),
               ),
-              OutlineButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, BottomBarScreen.routeName);
-                },
-                shape: StadiumBorder(),
-                highlightedBorderColor: Colors.deepPurple.shade200,
-                borderSide: BorderSide(width: 2, color: Colors.deepPurple),
-                child: Text('Sign in as a guest'),
-              ),
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : OutlineButton(
+                      onPressed: () {
+                        _loginAnonymosly();
+                        // Navigator.pushNamed(context, BottomBarScreen.routeName);
+                      },
+                      shape: StadiumBorder(),
+                      highlightedBorderColor: Colors.deepPurple.shade200,
+                      borderSide:
+                          BorderSide(width: 2, color: Colors.deepPurple),
+                      child: Text('Sign in as a guest'),
+                    ),
             ],
           ),
           SizedBox(
